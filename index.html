@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digger Web Remake</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="main-container">
+        <!-- Home Screen Menu -->
+        <div id="home-screen">
+            <h1 class="title">DIGGER</h1>
+            <div class="menu-box">
+                <div class="menu-item active">Game Mode: Retro</div>
+                <div class="menu-item disabled">Game Mode: Modern</div>
+                
+                <div class="spacer"></div>
+                
+                <div class="selection-title">Select Difficulty</div>
+                <button id="btn-easy" class="btn difficulty-btn">Easy</button>
+                <button id="btn-medium" class="btn difficulty-btn">Medium</button>
+                <button id="btn-hard" class="btn difficulty-btn">Hard</button>
+            </div>
+            <div id="high-score-display">HIGH SCORE: 000000</div>
+        </div>
+
+        <!-- Game Interface -->
+        <div id="game-container" style="display: none;">
+            <div id="hud">
+                <span id="score">SCORE: 00000</span>
+                <span id="lives">LIVES: 3</span>
+            </div>
+            <!-- Game canvas fixed 640x640 for native 16x16 40px bounds -->
+            <canvas id="game-canvas" width="640" height="640"></canvas>
+        </div>
+
+        <!-- System Overlay -->
+        <div id="overlay-screen" style="display: none;">
+            <h1 id="overlay-title">GAME OVER</h1>
+            <div id="overlay-message"></div>
+            <button id="btn-home" class="btn">Main Menu</button>
+        </div>
+    </div>
+    
+    <!-- ES6 Module entry point -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
