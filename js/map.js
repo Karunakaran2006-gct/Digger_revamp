@@ -11,39 +11,39 @@ export const TILE_TYPES = {
 
 // Map arrays: 'D' for Dirt, '.' for Air, 'E' for Emerald in Dirt, 'B' for Bag inside Dirt!
 const MAP_POOL = [
-    [ // Level 1 - Reference Classic Layout
+    [ // Level 1 — classic layout, pre-carved corridors, items in tunnels
         'DDDDDDDDDDDDDDDD',
-        'D.E.E.B.E.E.B..D',
-        'D.E.E.E.E.E.E..D',
-        'D.E.B.E.E.B.E..D',
-        'D.E.E.E.E.E.E..D',
-        'DDDD.DDDDDDDD..D',
-        'D..E.E.B.E.E.E.D',
-        'D..E.E.E.E.E.E.D',
-        'D..B.E.E.B.E.E.D',
-        'D..E.E.E.E.E.E.D',
         'D..DDDDDDDDD...D',
-        'D.E.E.B.E.E.B..D',
-        'D.E.E.E.E.E.E..D',
+        'D.eDDDDDDDDDe..D',
+        'D.eDDDDDDDDDe..D',
+        'D.eDBDDDDDDDe..D',
+        'D.eeDDDDDDDBe..D',
+        'D..eDDDDDDDDe..D',
         'D..............D',
+        'D..DDDDDDDDD...D',
+        'D.eDDDDBDDDDe..D',
+        'D.eeDDDDDDDDe..D',
+        'D..eDDDDDDDDee.D',
+        'D..............D',
+        'D..DBeDDeDDDb..D',
         'DDDDDDDDDDDDDDDD',
         'DDDDDDDDDDDDDDDD'
     ],
-    [ // Level 2 - Denser variant
+    [ // Level 2 — denser
         'DDDDDDDDDDDDDDDD',
-        'D.E.E.E.B.E.E..D',
-        'D.B.E.E.E.E.B..D',
-        'D.E.E.B.E.E.E..D',
-        'DDDDDD.DDDDDDD.D',
-        'D.E.E.E.E.B.E..D',
-        'D.E.B.E.E.E.E..D',
-        'D.E.E.E.B.E.E..D',
-        'D.DDDDDDDDD.DD.D',
-        'D.E.E.B.E.E.E..D',
-        'D.E.E.E.E.E.B..D',
-        'D.B.E.E.E.E.E..D',
-        'D.E.E.B.E.E.E..D',
+        'D..DDDDDbDDD...D',
+        'D.eeDDDDDDDDe..D',
+        'D.eDDDDDDDDDe..D',
+        'D.eDBDDDDDDDe..D',
+        'D.eeDDDDDDDDe..D',
+        'D..eDDDDDDDBe..D',
         'D..............D',
+        'D..DDDDDDDDD...D',
+        'D.eDDDDBDDDDe..D',
+        'D.eeDDDDDDDDe..D',
+        'D.eDDDDDDDDDee.D',
+        'D..............D',
+        'D..DBeDeDeDB...D',
         'DDDDDDDDDDDDDDDD',
         'DDDDDDDDDDDDDDDD'
     ]
@@ -63,12 +63,13 @@ export class GameMap {
 
     loadMapData(mapStringArray) {
         this.grid = [];
-        this.baseLayout = mapStringArray; // Hand off to main.js for strict internal item spawning
+        this.baseLayout = mapStringArray;
         for (let y = 0; y < MAP_ROWS; y++) {
             let row = [];
             for (let x = 0; x < MAP_COLS; x++) {
-                let cell = mapStringArray[y][x];
-                if (cell === 'D' || cell === 'E' || cell === 'B') {
+                let cell = mapStringArray[y] ? mapStringArray[y][x] : 'D';
+                // Only 'D' is solid dirt — E and B are items placed in AIR tunnels
+                if (cell === 'D') {
                     row.push(TILE_TYPES.DIRT);
                 } else {
                     row.push(TILE_TYPES.AIR);

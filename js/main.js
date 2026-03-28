@@ -117,16 +117,15 @@ class Game {
             }
         }
 
-        // Sequence spawn — level-based hobbin control
-        // Level N allows at most N hobbin transformations simultaneously
+        // Spawn 3 nobbins from level 1, more as levels progress
         const level = this.gameState.level || 1;
-        const monsterCount = 2 + Math.min(level - 1, 3); // 2 monsters level 1, up to 5
+        const monsterCount = Math.min(2 + level, 6); // Level 1 = 3, Level 2 = 4, max 6
         for (let i = 0; i < monsterCount; i++) {
-            const spawnDelay = i === 0 ? 0 : (2000 + i * 1500 - level * 200);
-            const m = new Monster(14, 1, Math.max(0, spawnDelay));
-            // Only first `level` monsters can transform to Hobbin
+            const spawnDelay = i === 0 ? 0 : (1500 * i);
+            const m = new Monster(14, 1, spawnDelay);
+            // Only first `level` monster(s) can transform to Hobbin
             if (i >= level) {
-                m.mutationTimer = 9999999; // Effectively never transforms
+                m.mutationTimer = 9999999;
             }
             this.gameState.entities.push(m);
         }

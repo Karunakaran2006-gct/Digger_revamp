@@ -101,13 +101,19 @@ export class Renderer {
         if (p) {
             const spriteId = p.isDead ? `rip${frame}` : `digger${p.direction}${frame}`;
             const playerSprite = gameState.sprites.get(spriteId);
-            
+
             if (playerSprite) {
                 this.ctx.save();
+
+                // Stun flash: alternate opacity every 150ms
+                if (p.isStunned) {
+                    let flashOn = Math.floor(gameState.time / 150) % 2 === 0;
+                    this.ctx.globalAlpha = flashOn ? 1.0 : 0.25;
+                }
+
                 this.ctx.translate(Math.round(p.x) + TILE_SIZE/2, Math.round(p.y) + TILE_SIZE/2);
-                
+
                 if (!p.isDead) {
-                    // Native Base Model faces LEFT
                     if (p.direction === 'Right') {
                         this.ctx.scale(-1, 1);
                     } else if (p.direction === 'Up') {
@@ -115,14 +121,13 @@ export class Renderer {
                     } else if (p.direction === 'Down') {
                         this.ctx.rotate(-Math.PI / 2);
                     }
-
-                    // Digging Wobble
                     if (p.isMoving) {
                         this.ctx.rotate(0.15 * Math.sin(gameState.time * 0.02));
                     }
                 }
 
                 this.ctx.drawImage(playerSprite, -24, -24, 48, 48);
+                this.ctx.globalAlpha = 1.0;
                 this.ctx.restore();
             }
         }
