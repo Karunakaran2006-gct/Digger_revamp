@@ -100,8 +100,13 @@ export class Player {
                 for (let e of gameState.entities) {
                     if (e.logicalX === this.logicalX && e.logicalY === this.logicalY) {
                         if (e.type === 'EMERALD') {
-                            gameState.score += 200;
+                            gameState.score += 25;
                             e.isDead = true;
+                            gameState.emeraldStreak = (gameState.emeraldStreak || 0) + 1;
+                            if (gameState.emeraldStreak % 8 === 0) {
+                                gameState.score += 250; // 8-in-a-row bonus!
+                                if (gameState.sound) gameState.sound.playBonus();
+                            }
                             if (gameState.sound) gameState.sound.playGem();
                         } else if (e.type === 'COIN') {
                             gameState.score += 1;

@@ -102,26 +102,34 @@ export class GoldBag {
 
             for (let e of [gameState.player, ...gameState.entities]) {
                 if (!e || e.isDead || e === this) continue;
-                if (e.type === 'NOBBIN' || e.type === 'HOBBIN') {
-                    if (Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 28 && this.fallHeight >= 1) {
-                        e.kill(gameState);
+
+                // Monsters: killed on any fall >= 1
+                if ((e.type === 'NOBBIN' || e.type === 'HOBBIN') &&
+                    Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 28 &&
+                    this.fallHeight >= 1) {
+                    e.kill(gameState);
+                    this.shatterToCoins(gameState);
+                    return;
+                }
+
+                // Player: kill if fell 2+ tiles (open air drop), stun if fell 1 tile
+                if (!e.type &&
+                    Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 28 &&
+                    this.fallHeight >= 1) {
+                    if (this.fallHeight >= 2) {
+                        // Bag fell from open air — kill the digger
+                        e.isDead = true;
+                        if (gameState.sound) gameState.sound.playDeath();
                         this.shatterToCoins(gameState);
-                        return;
-                    }
-                } else if (!e.type) {
-                    // Player — stun instead of kill on any fall
-                    if (Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 28 && this.fallHeight >= 1) {
+                    } else {
+                        // Fell only 1 tile (short drop from dirt) — stun the digger
                         if (!e.isStunned) {
                             e.isStunned = true;
                             e.stunTimer = 0;
                             if (gameState.sound) gameState.sound.playDeath();
                         }
-                        // Shatter bag only if fell 2+ tiles
-                        if (this.fallHeight >= 2) {
-                            this.shatterToCoins(gameState);
-                            return;
-                        }
                     }
+                    return;
                 }
             }
 

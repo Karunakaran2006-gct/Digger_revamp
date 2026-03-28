@@ -103,30 +103,39 @@ class Game {
 
         this.gameMap.loadRandomMap();
         
-        // Spawn Entities Logic tightly aligned to Map Layout definitions
+        // Spawn Entities: scan map layout for items
         this.gameState.totalEmeralds = 0;
+        this.gameState.emeraldStreak = 0; // 8-in-a-row counter
         for (let y = 0; y < MAP_ROWS; y++) {
             for (let x = 0; x < MAP_COLS; x++) {
-                let cell = this.gameMap.baseLayout[y][x];
-                if (cell === 'E') {
+                let cell = this.gameMap.baseLayout[y] ? this.gameMap.baseLayout[y][x] : 'D';
+                if (cell === 'E' || cell === 'e') {
                     this.gameState.entities.push(new Emerald(x, y));
                     this.gameState.totalEmeralds++;
-                } else if (cell === 'B') {
+                } else if (cell === 'B' || cell === 'b') {
                     this.gameState.entities.push(new GoldBag(x, y));
                 }
             }
         }
 
-        // Spawn 3 nobbins from level 1, more as levels progress
+        // Speed multiplier table based on difficulty & sub-level
+        const speedTable = {
+            'Easy':   [1.0, 1.25, 1.5],
+            'Medium': [1.25, 1.5, 1.75],
+            'Hard':   [1.5, 1.75, 1.9]
+        };
+        const diff = this.gameState.difficulty || 'Easy';
+        const subLevel = ((this.gameState.level - 1) % 3); // 0,1,2 cycling
+        const speedMult = (speedTable[diff] || speedTable['Easy'])[subLevel];
+        this.gameState.nobbinSpeedMult = speedMult;
+
+        // Spawn 3 nobbins always, level-based hobbin count
         const level = this.gameState.level || 1;
-        const monsterCount = Math.min(2 + level, 6); // Level 1 = 3, Level 2 = 4, max 6
-        for (let i = 0; i < monsterCount; i++) {
+        const hobbinAllowed = Math.min(level, 3); // max 3 hobbins at once
+        for (let i = 0; i < 3; i++) {
             const spawnDelay = i === 0 ? 0 : (1500 * i);
-            const m = new Monster(14, 1, spawnDelay);
-            // Only first `level` monster(s) can transform to Hobbin
-            if (i >= level) {
-                m.mutationTimer = 9999999;
-            }
+            const m = new Monster(14, 1, spawnDelay, speedMult);
+            if (i >= hobbinAllowed) m.mutationTimer = 9999999;
             this.gameState.entities.push(m);
         }
 

@@ -2,7 +2,7 @@
 import { TILE_SIZE, MAP_COLS, MAP_ROWS, TILE_TYPES } from './map.js';
 
 export class Monster {
-    constructor(logicalX, logicalY, spawnDelayMs = 0) {
+    constructor(logicalX, logicalY, spawnDelayMs = 0, speedMult = 1.0) {
         this.type = 'NOBBIN';
         this.logicalX = logicalX;
         this.logicalY = logicalY;
@@ -14,7 +14,8 @@ export class Monster {
         this.targetX = logicalX;
         this.targetY = logicalY;
         this.isMoving = false;
-        this.speed = 0.0875;
+        this.baseSpeed = 0.0875;
+        this.speed = this.baseSpeed * speedMult;
 
         this.spawnDelay = spawnDelayMs; // Staggered entry
 
