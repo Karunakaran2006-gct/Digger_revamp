@@ -140,25 +140,32 @@ export class Monster {
         if (tooClose && !this.isHobbin) {
             let mX = Math.sign(sepDx);
             let mY = Math.sign(sepDy);
-            
-            // If perfectly stacked (0,0), explode outwards in random directions
+
             if (mX === 0 && mY === 0) {
-                const rndDirs = [{x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}];
-                const rnd = rndDirs[Math.floor(Math.random() * 4)];
-                mX = rnd.x;
-                mY = rnd.y;
-            }
-            
-            if (this.canNobbinWalk(this.logicalX + mX, this.logicalY + mY, gameState)) {
-                this.setTargetDirection(mX, mY);
-                return;
-            } else if (this.canNobbinWalk(this.logicalX + mX, this.logicalY, gameState)) {
-                this.setTargetDirection(mX, 0);
-                return;
-            } else if (this.canNobbinWalk(this.logicalX, this.logicalY + mY, gameState)) {
-                this.setTargetDirection(0, mY);
+                // Perfectly stacked — pick a random open direction
+                const rndDirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+                for (let d of rndDirs.sort(() => 0.5 - Math.random())) {
+                    if (this.canNobbinWalk(this.logicalX + d.x, this.logicalY + d.y, gameState)) {
+                        this.setTargetDirection(d.x, d.y);
+                        return;
+                    }
+                }
                 return;
             }
+
+            const dirs = [
+                {x: mX, y: 0}, {x: 0, y: mY},
+                {x: -mX, y: 0}, {x: 0, y: -mY},
+                {x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}
+            ];
+            for (let d of dirs) {
+                if (d.x === 0 && d.y === 0) continue;
+                if (this.canNobbinWalk(this.logicalX + d.x, this.logicalY + d.y, gameState)) {
+                    this.setTargetDirection(d.x, d.y);
+                    return;
+                }
+            }
+            return;
         }
 
         // Logic Step - 2. Chase or Flee

@@ -30,26 +30,64 @@ export class Renderer {
 
         if (gameState.entities) {
             for (let e of gameState.entities) {
+                if (e.type === 'BULLET') {
+                    // Draw bullet manually: yellow moving dot + burst
+                    this.ctx.save();
+                    if (e.bursting) {
+                        // Burst ring expanding outward
+                        let prog = e.burstTimer / e.burstDuration;
+                        let radius = 4 + prog * 14;
+                        let alpha = 1 - prog;
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.strokeStyle = '#FFD700';
+                        this.ctx.lineWidth = 3;
+                        this.ctx.beginPath();
+                        this.ctx.arc(e.x, e.y, radius, 0, Math.PI * 2);
+                        this.ctx.stroke();
+                        this.ctx.fillStyle = '#FFA500';
+                        this.ctx.beginPath();
+                        this.ctx.arc(e.x, e.y, radius * 0.4, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.globalAlpha = 1;
+                    } else {
+                        // Fast yellow bullet dot
+                        this.ctx.fillStyle = '#FFD700';
+                        this.ctx.shadowColor = '#FFD700';
+                        this.ctx.shadowBlur = 8;
+                        this.ctx.beginPath();
+                        this.ctx.arc(e.x, e.y, 5, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.shadowBlur = 0;
+                    }
+                    this.ctx.restore();
+                    continue;
+                }
+
                 if (e.spriteId) {
                     const renderId = `${e.spriteId}${frame}`;
                     const sprite = gameState.sprites.get(renderId);
-                    
+
                     if (sprite) {
                         this.ctx.save();
-                        // Anchor at physical center of the dynamic scale tile
                         this.ctx.translate(Math.round(e.x) + TILE_SIZE/2, Math.round(e.y) + TILE_SIZE/2);
-                        
-                        // Bounce/Squash AI Animation
+
+                        // Wobble effect on goldbag about to fall
+                        if (e.type === 'GOLDBAG' && e.isWobbling) {
+                            let wobble = Math.sin(e.wobbleTimer * 0.04) * 0.12;
+                            this.ctx.rotate(wobble);
+                        }
+
                         if (e.type === 'NOBBIN' || e.type === 'HOBBIN') {
                             if (e.isMoving) {
                                 let stretch = 1 + 0.1 * Math.sin(gameState.time * 0.015);
-                                let squash = 1 - 0.1 * Math.sin(gameState.time * 0.015);
+                                let squash  = 1 - 0.1 * Math.sin(gameState.time * 0.015);
                                 this.ctx.scale(stretch, squash);
                             }
-                            // User request: "increase the nobbin/hobbin size a bit not too big" -> rendered at 56x56 (1.4x scale over 40)
                             this.ctx.drawImage(sprite, -28, -28, 56, 56);
+                        } else if (e.type === 'EMERALD') {
+                            // Slightly smaller emeralds matching reference
+                            this.ctx.drawImage(sprite, -18, -18, 36, 36);
                         } else {
-                            // Standard 16x16 40px grid scaling -> drawn at 48x48
                             this.ctx.drawImage(sprite, -24, -24, 48, 48);
                         }
 

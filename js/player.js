@@ -16,8 +16,12 @@ export class Player {
         this.targetY = startY;
 
         // Configuration High-Res Speed
-        this.speed = 0.125; // pixels per ms
-        this.canShoot = true; // 1 bullet per life
+        this.speed = 0.125;
+        this.baseSpeed = 0.125;
+        this.canShoot = true;
+        this.isStunned = false;
+        this.stunTimer = 0;
+        this.stunDuration = 2500; // ms stun from bag
         
         // Input state
         this.keys = {
@@ -50,6 +54,16 @@ export class Player {
 
     update(dt, gameState) {
         if (this.isDead) return;
+
+        // Stun state — cannot move, just count down
+        if (this.isStunned) {
+            this.stunTimer += dt;
+            if (this.stunTimer >= this.stunDuration) {
+                this.isStunned = false;
+                this.stunTimer = 0;
+            }
+            return;
+        }
 
         // Spacebar shooting mechanism
         if (this.keys[' '] && this.canShoot) {
@@ -102,17 +116,12 @@ export class Player {
                     }
                 }
             } else {
-                // Interpolation glide
+                // Interpolation glide — carve only while moving
                 this.x += (dx / dist) * moveAmt;
                 this.y += (dy / dist) * moveAmt;
-                
-                // Continuous pixel-perfect carving
                 gameState.map.carve(this.x, this.y);
             }
-        } 
-
-        // Poll for physical static carving if standing still
-        if (!this.isMoving) gameState.map.carve(this.x, this.y);
+        }
 
         // 2. Poll for new movement input if idle
         if (!this.isMoving) {
@@ -133,16 +142,23 @@ export class Player {
                     
                     // Check for solid entities blocking the path (GoldBag)
                     let pathBlocked = false;
+                    let pushingBag = false;
                     for (let e of gameState.entities) {
                         if (e.type === 'GOLDBAG' && e.logicalX === nextX && e.logicalY === nextY) {
-                            // Can we push the bag?
                             if (e.push(moveDirX, moveDirY, gameState)) {
-                                pathBlocked = false; // Pushed successfully
+                                pathBlocked = false;
+                                pushingBag = true;
+                                // Speed reduction: slight if open air beyond, heavy if dirt beyond
+                                const beyondX = nextX + moveDirX;
+                                const beyondY = nextY + moveDirY;
+                                const isBeyondDirt = gameState.map.getTile(beyondX, beyondY) !== 0;
+                                this.speed = isBeyondDirt ? 0.055 : 0.08;
                             } else {
-                                pathBlocked = true; // Cannot push (blocked behind)
+                                pathBlocked = true;
                             }
                         }
                     }
+                    if (!pushingBag) this.speed = this.baseSpeed;
 
                     if (!pathBlocked) {
                         this.targetX = nextX;

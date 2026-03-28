@@ -14,7 +14,12 @@ export class GoldBag {
         
         this.isFalling = false;
         this.fallHeight = 0;
-        this.fallSpeed = 0.3125; 
+        this.fallSpeed = 0.3125;
+
+        // Wobble before fall
+        this.wobbleTimer = 0;
+        this.wobbleDuration = 350; // ms of wobble before drop
+        this.isWobbling = false;
     }
 
     push(moveDirX, moveDirY, gameState) {
@@ -59,7 +64,7 @@ export class GoldBag {
     update(dt, gameState) {
         if (this.isDead) return;
 
-        if (!this.isFalling) {
+        if (!this.isFalling && !this.isWobbling) {
             let nextY = this.logicalY + 1;
             if (nextY < MAP_ROWS && gameState.map.getTile(this.logicalX, nextY) === TILE_TYPES.AIR) {
                 let supportedByBag = false;
@@ -68,12 +73,27 @@ export class GoldBag {
                         supportedByBag = true;
                     }
                 }
-                
+                // Only wobble if NOT placed directly on ground (5b: 1-tile-above-ground bags don't fall/shatter)
+                const twoBelow = this.logicalY + 2;
+                const hasFallSpace = twoBelow < MAP_ROWS && gameState.map.getTile(this.logicalX, twoBelow) === TILE_TYPES.AIR;
                 if (!supportedByBag) {
-                    this.isFalling = true;
-                    this.fallHeight = 0;
+                    if (hasFallSpace) {
+                        this.isWobbling = true;
+                        this.wobbleTimer = 0;
+                    }
                 }
             }
+        }
+
+        // Wobble phase
+        if (this.isWobbling) {
+            this.wobbleTimer += dt;
+            if (this.wobbleTimer >= this.wobbleDuration) {
+                this.isWobbling = false;
+                this.isFalling = true;
+                this.fallHeight = 0;
+            }
+            return; // Don't fall yet, just wobble visually
         }
 
         if (this.isFalling) {
@@ -89,9 +109,19 @@ export class GoldBag {
                 if (!e || e.isDead || e === this) continue;
                 if (e.type === 'NOBBIN' || e.type === 'HOBBIN' || !e.type) {
                     if (Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 25) {
-                        if (e.kill) e.kill(gameState);
-                        else e.isDead = true; // Player
-                        this.shatterToCoins(gameState);
+                        if (this.fallHeight > 1) {
+                            if (e.kill) {
+                                e.kill(gameState); // Monster killed
+                            } else if (!e.type) {
+                                // Player — stun instead of kill (issue 5a)
+                                if (!e.isStunned) {
+                                    e.isStunned = true;
+                                    e.stunTimer = 0;
+                                    if (gameState.sound) gameState.sound.playDeath();
+                                }
+                            }
+                            this.shatterToCoins(gameState);
+                        }
                     }
                 }
             }

@@ -117,10 +117,19 @@ class Game {
             }
         }
 
-        // Sequence spawn classic style from top-right corner
-        this.gameState.entities.push(new Monster(14, 1, 0));      // Instant
-        this.gameState.entities.push(new Monster(14, 1, 2500 - (this.gameState.level * 200))); // Scaled Spawns
-        this.gameState.entities.push(new Monster(14, 1, 5000 - (this.gameState.level * 400))); 
+        // Sequence spawn — level-based hobbin control
+        // Level N allows at most N hobbin transformations simultaneously
+        const level = this.gameState.level || 1;
+        const monsterCount = 2 + Math.min(level - 1, 3); // 2 monsters level 1, up to 5
+        for (let i = 0; i < monsterCount; i++) {
+            const spawnDelay = i === 0 ? 0 : (2000 + i * 1500 - level * 200);
+            const m = new Monster(14, 1, Math.max(0, spawnDelay));
+            // Only first `level` monsters can transform to Hobbin
+            if (i >= level) {
+                m.mutationTimer = 9999999; // Effectively never transforms
+            }
+            this.gameState.entities.push(m);
+        }
 
         if (!this.player) this.player = new Player(7, 13);
         else { this.player.isDead = false; this.player.logicalX = 7; this.player.logicalY = 13; this.player.x = 7 * TILE_SIZE; this.player.y = 13 * TILE_SIZE; }
