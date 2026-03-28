@@ -56,6 +56,7 @@ export class Player {
             this.canShoot = false;
             const bullet = new Bullet(this.x, this.y, this.direction);
             gameState.entities.push(bullet);
+            if (gameState.sound) gameState.sound.playShoot();
         }
 
         // 1. Moving towards target logic
@@ -79,20 +80,24 @@ export class Player {
                 
                 // Dig dirt if we landed on it
                 gameState.map.dig(this.logicalX, this.logicalY);
+                if (gameState.sound) gameState.sound.playDig();
 
                 // Collect Emeralds / Coins
                 for (let e of gameState.entities) {
                     if (e.logicalX === this.logicalX && e.logicalY === this.logicalY) {
                         if (e.type === 'EMERALD') {
                             gameState.score += 200;
-                            e.isDead = true; 
+                            e.isDead = true;
+                            if (gameState.sound) gameState.sound.playGem();
                         } else if (e.type === 'COIN') {
                             gameState.score += 1;
                             e.isDead = true;
+                            if (gameState.sound) gameState.sound.playCoin();
                         } else if (e.type === 'CHERRY') {
                             gameState.score += 1000;
-                            gameState.bonusTimer = 10000; 
+                            gameState.bonusTimer = 10000;
                             e.isDead = true;
+                            if (gameState.sound) gameState.sound.playBonus();
                         }
                     }
                 }

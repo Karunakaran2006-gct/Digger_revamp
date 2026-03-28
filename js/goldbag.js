@@ -44,6 +44,7 @@ export class GoldBag {
 
     shatterToCoins(gameState) {
         this.isDead = true;
+        if (gameState.sound) gameState.sound.playBagShatter();
         for (let i=0; i<4; i++) {
              let offX = Math.floor(Math.random() * 3) - 1;
              let offY = Math.floor(Math.random() * 3) - 1;
@@ -87,12 +88,10 @@ export class GoldBag {
             for (let e of [gameState.player, ...gameState.entities]) {
                 if (!e || e.isDead || e === this) continue;
                 if (e.type === 'NOBBIN' || e.type === 'HOBBIN' || !e.type) {
-                    if (Math.abs(e.x - this.x) < 20 && this.y + TILE_SIZE > e.y && this.y < e.y + TILE_SIZE) {
-                        if (this.fallHeight > 1) {
-                            if (e.kill) e.kill(gameState);
-                            else e.isDead = true; // Player
-                            this.shatterToCoins(gameState);
-                        }
+                    if (Math.abs(e.x - this.x) < 20 && Math.abs(e.y - this.y) < 25) {
+                        if (e.kill) e.kill(gameState);
+                        else e.isDead = true; // Player
+                        this.shatterToCoins(gameState);
                     }
                 }
             }

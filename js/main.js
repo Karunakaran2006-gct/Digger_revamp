@@ -9,6 +9,7 @@ import { GoldBag } from './goldbag.js';
 import { Monster } from './nobbin.js';
 import { Cherry } from './cherry.js';
 import { MAP_COLS, MAP_ROWS, TILE_TYPES, TILE_SIZE } from './map.js';
+import { SoundManager } from './sound.js';
 
 const STATE = { MENU: 0, PLAYING: 1, OVER: 2 };
 
@@ -29,7 +30,8 @@ class Game {
             entities: [],
             score: 0,
             lives: 3,
-            difficulty: 'Medium'
+            difficulty: 'Medium',
+            sound: new SoundManager()
         };
 
         this.loop = this.loop.bind(this);
@@ -95,6 +97,8 @@ class Game {
         this.gameState.globalFrame = 1;
         this.gameState.bonusTimer = 0;
         this.gameState.cherrySpawned = false;
+        this.gameState.monstersToSpawn = 0;
+        this.gameState.spawnTimer = 0;
         this.updateHUD();
 
         this.gameMap.loadRandomMap();
@@ -150,12 +154,29 @@ class Game {
             if (e.update) e.update(dt, this.gameState);
             if (e.type === 'EMERALD' && !e.isDead) emeraldStr++;
             
-            if (e.isDead) this.gameState.entities.splice(i, 1);
+            if (e.isDead) {
+                // Register killed monsters to infinite spigot
+                if (e.type === 'NOBBIN' || e.type === 'HOBBIN') {
+                    this.gameState.monstersToSpawn++;
+                }
+                this.gameState.entities.splice(i, 1);
+            }
+        }
+
+        // Infinite Monster Wave Spigot
+        if (this.gameState.monstersToSpawn > 0) {
+            this.gameState.spawnTimer += dt;
+            if (this.gameState.spawnTimer > 4000) {
+                this.gameState.entities.push(new Monster(14, 1, 0));
+                this.gameState.monstersToSpawn--;
+                this.gameState.spawnTimer = 0;
+            }
         }
 
         if (this.gameState.score >= 1000 && !this.gameState.cherrySpawned) {
             this.gameState.cherrySpawned = true;
-            this.gameState.entities.push(new Cherry(14, 1)); // Spawn safely near top right
+            this.gameState.entities.push(new Cherry(14, 1));
+            if (this.gameState.sound) this.gameState.sound.playBonus();
         }
 
         if (this.gameState.bonusTimer > 0) this.gameState.bonusTimer -= dt;

@@ -27,6 +27,7 @@ export class Monster {
     kill(gameState) {
         this.isDead = true;
         gameState.score += 250;
+        if (gameState.sound) gameState.sound.playEnemyKill();
     }
 
     setTargetDirection(dx, dy) {
@@ -84,10 +85,13 @@ export class Monster {
                 this.logicalY = this.targetY;
                 this.isMoving = false;
                 
-                // Hobbin World Interaction Phase!
+                // Hobbin World Interaction Phase! - Dig visually AND logically
                 if (this.isHobbin) {
                     if (gameState.map.getTile(this.logicalX, this.logicalY) === TILE_TYPES.DIRT) {
                         gameState.map.setTile(this.logicalX, this.logicalY, TILE_TYPES.AIR);
+                        // Also visually erase the dirt canvas so Nobbin doesn't appear to ghost
+                        gameState.map.carve(this.x, this.y);
+                        if (gameState.sound) gameState.sound.playDig();
                     }
                     for (let e of gameState.entities) {
                         if ((e.type === 'GOLDBAG' || e.type === 'EMERALD') && e !== this && Math.round(e.logicalX) === this.logicalX && Math.round(e.logicalY) === this.logicalY) {
